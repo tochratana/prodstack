@@ -59,9 +59,8 @@ src/main/java/com/blog/api/
 
 ## Prerequisites
 
-- Java 17 or higher
-- PostgreSQL 12 or higher
-- Gradle 7.x or higher
+- Java 21 or higher
+- PostgreSQL 17 or higher
 
 ## Setup Instructions
 
@@ -334,8 +333,4 @@ CREATE TABLE blog_posts (
 - Image upload for blog posts
 - User profile management
 - Search functionality
-- Post likes/reactions
-
-## License
-
-This project is open source and available under the MIT License.
+- Post likes/reactions\
