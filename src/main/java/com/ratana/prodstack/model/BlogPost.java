@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "blog_posts")
@@ -35,6 +36,27 @@ public class BlogPost {
     @Transient
     private String authorUsername;
 
+    @Transient
+    private String authorProfileImage;
+
+    @OneToMany(mappedBy = "blogPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BlogImage> images;
+
+    @OneToMany(mappedBy = "blogPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes;
+
+    @OneToMany(mappedBy = "blogPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
+
+    @Transient
+    private Integer likeCount;
+
+    @Transient
+    private Integer commentCount;
+
+    @Transient
+    private Boolean likedByCurrentUser;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -47,6 +69,13 @@ public class BlogPost {
     private void onLoad() {
         if (author != null) {
             this.authorUsername = author.getUsername();
+            this.authorProfileImage = author.getProfileImage();
+        }
+        if (likes != null) {
+            this.likeCount = likes.size();
+        }
+        if (comments != null) {
+            this.commentCount = comments.size();
         }
     }
 }
