@@ -1,6 +1,5 @@
-# 1. Build stage - using JDK 25 if available
-FROM gradle:8.6-jdk25-ea AS builder
-#Note: -ea for early-access
+# 1. Build stage
+FROM gradle:8.6-jdk21 AS builder
 
 WORKDIR /prod-stack
 
@@ -14,7 +13,7 @@ RUN chmod +x gradlew
 RUN ./gradlew bootJar --no-daemon
 
 # 2. Runtime stage
-FROM eclipse-temurin:25-jre AS runtime  # Also need JRE 25
+FROM eclipse-temurin:21-jre
 
 WORKDIR /prod-stack
 
