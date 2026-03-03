@@ -3,16 +3,14 @@ on:
     branches:
       - main
 
-# Environment use for create variable for use in this pipeline
 env:
-  DOCKER_IMAGE_NAME: prod-api # image name in docker hub
-  HELM_REPO: tochratana/gitops-fullstack # repo that store template
-# build docker image and push to docker hub
+  DOCKER_IMAGE_NAME: prod-api
+  HELM_REPO: tochratana/gitops-fullstack
+
 jobs:
   ci-jobs:
-    # runs-on mean select machines for run this pipeline, normaly it have two type of this (github machines, and self hosted machines)
     runs-on: ubuntu-latest
-    environment: DOCKER_ENV # setting > Environment > create environment
+    environment: DOCKER_ENV
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -22,65 +20,48 @@ jobs:
       - name: Show the new tags value
         run: |
           echo "Tag value is: ${{ env.TAG }}"
-      # login to docker hub
-      # setting > Environment(create new environment) > add screte (USERNAME, PASSWORD)
-      # PASSWORD can be token from docker hub
       - name: Login to Dockerhub
         run: |
-          echo "${{ secrets.PASSWORD }}" | docker login -u ${{secrets.USERNAME}} --password-stdin
-
-      # Build docker image mean build and -t > tag already
+          echo "${{ secrets.PASSWORD }}" | docker login -u ${{ secrets.USERNAME }} --password-stdin
       - name: Build Docker image and tag
         run: docker build -t ${{ secrets.USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }} .
       - name: Push to Docker hub
         run: docker push ${{ secrets.USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
       - name: Logout from Dockerhub
         if: always()
-        run: |
-          docker logout
-  # update helm repo with new imagejobs:
+        run: docker logout
+
   cd-jobs:
     needs: ci-jobs
     runs-on: ubuntu-latest
     environment: HELM_ENV
     steps:
       - name: Install yq command
-        # install yq commnd for easy to work with file
         run: |
           wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
       - name: Add Commit SHA to TAG env
         run: |
           echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
-
-      # clone the helm repo remporarily
-      # for helm repo should be create in setting > Environment > create new environment
       - name: Clone argocd repo
         run: |
-          git clone https://github.com/${{ env.HELM_REPO }} helm_repo
-
-      # update helm chart after have new config or edit code
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ env.HELM_REPO }}.git helm_repo
       - name: Update Helm Chart
-        # for cd if in template repo have chart, shoud be cd in chart
-        # DOCKER_USERNAME is in HELM_REPO
-        # GET_TOKEN is token from github in Fine-grained personal access tokens(contnets -> read/write, workflow -> read/write)
         run: |
           cd helm_repo
 
-          echo "Update repository username/imagename "
+          echo "Updating backend image in full-stack-app values..."
+          yq -i '.backend.image.repository = "${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}"' charts/full-stack-app/values.yaml
+          yq -i '.backend.image.tag = "${{ env.TAG }}"' charts/full-stack-app/values.yaml
 
-          yq -i ".image.repository=\"${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME}}\"" values.yaml
+          echo "Updated values:"
+          yq '.backend.image' charts/full-stack-app/values.yaml
 
-          echo "Update image tag "
-          yq -i ".image.tag=\"${{ env.TAG }}\"" values.yaml
-
-          git config --global user.email "username@example.com"
-          git config --global user.name "dummyname"
+          git config --global user.email "${{ secrets.DOCKER_USERNAME }}@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
           git add .
-          git commit -m "Update helm to use image ${{ env.TAG }}"
-
-          git push https://${{ secrets.GIT_TOKEN }}@github.com/${{ env.HELM_REPO }}
-
+          git commit -m "ci: update backend image to ${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG }}"
+          git push
       - name: Clean up
-        run: |
-          rm -rf helm_repo
+        if: always()
+        run: rm -rf helm_repo
