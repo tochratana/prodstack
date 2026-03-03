@@ -5,7 +5,7 @@ on:
 
 # Environment use for create variable for use in this pipeline
 env:
-  DOCKER_IMAGE_NAME: prod-ui # image name in docker hub
+  DOCKER_IMAGE_NAME: prod-api # image name in docker hub
   HELM_REPO: tochratana/gitops-fullstack # repo that store template
 # build docker image and push to docker hub
 jobs:
