@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/posts", "/api/posts/**").permitAll()
                         .requestMatchers("/api/files/**").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
