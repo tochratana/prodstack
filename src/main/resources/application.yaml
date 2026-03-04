@@ -1,0 +1,53 @@
+# Database Configuration (defaults for local dev; overridden by env vars in K8s)
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/blog_db}
+    username: ${SPRING_DATASOURCE_USERNAME:tochratana}
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:rmV2lyUfrk+NTfmLXWQKAMGm/WutkgSCn96nwT60f1Usg8NWH+apJNBozIBrS1c+Vg6zR9O1Sd3wUei4udEB9A==}
+  expiration: 86400000
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+
+# Logging
+logging:
+  level:
+    org.springframework.security: ${LOGGING_LEVEL:INFO}
+
+# File Storage
+file:
+  upload-dir: ./uploads
+  profile-dir: ./uploads/profiles
+  blog-dir: ./uploads/blogs
+
+# Actuator Configuration
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
